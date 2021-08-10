@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Link, Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { detail } from '../actions/apost';
+import M_buildings from "../buildings/M_buildings"
+import Y_buildings from "../buildings/Y_buildings"
 
 const List = ({ isAuthenticated, lists, detail }) => {
-
+    
     const [searchItem, setSearchItem] = useState("");
     
     const [selectedFilter, setSelectedFilter] = useState({
         lost_found:'',
         campus:'',
-        in_out:'',
         building:'',
         item:'',
         color:'',
@@ -19,7 +20,14 @@ const List = ({ isAuthenticated, lists, detail }) => {
 
     const [filterList, setFilterList] = useState(lists);
 
-    const {lost_found, campus, in_out, building, item, color, date} = selectedFilter;
+    const [buildingList, setBuildingList] = useState([<option value="">학관</option>]);
+
+    const seoul = M_buildings.datas.map((building) => building.name);
+    seoul.push("교외 (학교 주변)");
+    const suwon = Y_buildings.datas.map((building) => building.name);
+    suwon.push("교외 (학교 주변)");
+    
+    const {lost_found, campus, building, item, color, date} = selectedFilter;
 
     if (!isAuthenticated) {
         return <Redirect to = '/login' />
@@ -33,7 +41,14 @@ const List = ({ isAuthenticated, lists, detail }) => {
         e.preventDefault();
         let searchList = lists;
         if (searchItem) {
-            searchList = searchList.filter((list) => list.item.match(searchItem));
+            searchList = searchList.filter((list) => list.campus.match(searchItem));
+            console.log(searchList);
+            console.log(typeof(searchList));
+            if (Object.keys(searchList).length === 0) {
+                searchList = lists;
+                searchList = searchList.filter((list) => list.content.match(searchItem));
+                
+            }
         }
         setFilterList(searchList);
     }
@@ -47,19 +62,15 @@ const List = ({ isAuthenticated, lists, detail }) => {
             console.log("check");
             filteringList = filteringList.filter((list) => list.campus === campus);
         }
-        if (in_out) {
-            filteringList = filteringList.filter((list) => list.in_out === in_out);
-        }
         if (building) {
             filteringList = filteringList.filter((list) => list.building === building);
         }
         if (item) {
             filteringList = filteringList.filter((list) => list.item === item);
         }
-        /*
         if (color) {
             filteringList = filteringList.filter((list) => list.color === color);
-        }*/
+        }
         if (date) {
             filteringList = filteringList.filter((list) => list.date === date);
         }
@@ -69,6 +80,21 @@ const List = ({ isAuthenticated, lists, detail }) => {
     const handleChange = (e) => {
         setSelectedFilter({...selectedFilter, [e.target.name]: e.target.value});
         console.log(e.target.name, e.target.value);
+        if (e.target.name === "campus") {
+            let elemArray=[];
+            if (e.target.value === "명륜") {
+                for (let i = 0; i < seoul.length; i++) {
+                    elemArray.push(<option value={seoul[i]}>{seoul[i]}</option>);
+                }
+                
+            } else if (e.target.value === "율전") {
+                for (let i = 0; i < suwon.length; i++) {
+                    elemArray.push(<option value={suwon[i]}>{suwon[i]}</option>);
+                }
+
+            }
+            setBuildingList(elemArray);
+        }
     }
 
     const handleSubmit = (e) => {
@@ -77,11 +103,10 @@ const List = ({ isAuthenticated, lists, detail }) => {
         filtering();
     }
 
-    let renderList;
-    renderList = filterList.map((list) => {
+    let renderList = filterList.map((list) => {
 
         return (
-            <div>
+            <div key={list.id}>
                 <div>
                     <Link
                         to={{pathname: `/list/${list.id}`}}
@@ -91,13 +116,13 @@ const List = ({ isAuthenticated, lists, detail }) => {
                             <img src={list.image} width='100'/>
                             <div>{list.title}</div>
                             <div>{list.campus}</div>
-                            <div>{list.location}</div>                            </p>
+                            <div>{list.location}</div>
+                        </p>
                     </Link>
                 </div>
             </div>
         );
     });
-
 
     const getDetail = (id, e) => {
             detail(id);
@@ -128,15 +153,9 @@ const List = ({ isAuthenticated, lists, detail }) => {
                         <option value="명륜">명륜</option>
                         <option value="율전">율전</option>
                     </select>
-                    <select name="in_out" value={in_out} onChange= {e => handleChange(e)}>
-                        <option value="">교내 교외</option>
-                        <option value="교내">교내</option>
-                        <option value="교외">교외</option>
-                    </select>
                     <select name="building" value={building} onChange= {e => handleChange(e)}>
-                        <option value="">학관</option>
-                        <option value="경영관">경영관</option>
-                        <option value="학생회관">학생회관</option>
+                        {buildingList};
+                        
                     </select>
                     <select name="item" value={item} onChange= {e => handleChange(e)}>
                         <option value="">물품 종류</option>
