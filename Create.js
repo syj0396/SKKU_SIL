@@ -214,6 +214,17 @@ const Create = ({ read, create, isAuthenticated, _user }) => {
                     />
                 </div>
                 <div className='form-group'>
+                    <input
+                        className='form-control'
+                        type='text'
+                        placeholder='제목'
+                        name='title'
+                        value={title}
+                        onChange={e => onChange(e)}
+                        required
+                    />
+                </div>
+                <div className='form-group'>
                     <textarea
                         className='form-control'
                         placeholder='내용'
